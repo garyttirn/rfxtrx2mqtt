@@ -1,0 +1,15 @@
+#/etc/systemd/system/rfxtrx2mqtt.service
+[Unit]
+Description=MQTT bridge driver for the RFXCOM rfxtrx433 RF modem 
+Documentation=https://github.com/garyttirn/rfxtrx2mqtt
+After=network.target
+
+[Service]
+Environment=NODE_PORT=3001
+Type=simple
+User=vera
+ExecStart=/usr/bin/node /opt/rfxtrx2mqtt/rfxcom.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

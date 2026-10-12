@@ -336,9 +336,14 @@ function readArgumentS()
 function readConfig()
 {
     try {
-        config = yaml.load(fs.readFileSync('./configuration.yaml', 'utf8'));
+        config = yaml.load(fs.readFileSync('/etc/rfxtrx2mqtt/configuration.yaml', 'utf8'));
     } catch( e ) {
+        if (e.name === 'YAMLException') {
+           console.error(`YAML Syntax Error on line ${e.mark.line + 1}, column ${e.mark.column + 1}:`);
+           console.error(e.message);
+        } else {
         logerror('MAIN', `Error loading config file !`);
+        }
     }
 
     if( !config.serial?.port ) {
