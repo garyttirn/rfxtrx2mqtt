@@ -235,7 +235,7 @@ function subscribeTopics()
         const setTopic = `${p.topic}/+/set`;
 
         // Prepends the base_topic followed by a slash if it exists; otherwise uses just the set topic
-        const topic = baseTopic ? `${baseTopic}/${setTopic}/+/set` : setTopic;
+        const topic = baseTopic ? `${baseTopic}/${setTopic}` : setTopic;
 
         if( !topics.includes(topic) ) {
             client.subscribe(topic, (err) => { if( err ) console.log(err); });
@@ -252,18 +252,20 @@ function receiveMessage(topic, message)
         return;
     }
 
-    const t = topic.split("/");
+    let t = topic.split("/");
 
     // Search in all used protocols
     for( let p of txProtocols ) {
 
+        let pt = p.topic.split("/");
+
         // Skip if the message topic doesn't match the protocol
-        if( p.topic != t[1] ) continue;
+        if( pt[pt.length-1] != t[t.length-3] ) continue;
 
         // Find the device the message was intended for
         for( let i in p.devices ) {
             const m = p.devices[i];
-            if( m === t[2] ) {
+            if( m === t[t.length-2] ) {
                 const s = message.toString();
                 loginfo('RFXC', `${m} set to ${s}`);
                 try {
