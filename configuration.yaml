@@ -6,10 +6,11 @@ mqtt:
   server: 'mqtt://192.168.4.100'
   username: 'user'          # optional, leave empty if no user/pass
   password: 'password'      # optional, leave empty if no user/pass
-  base_topic: rfxcom        # optional, base MQTT topic
+  base_topic: 'rfxcom'        # optional, base MQTT topic
+  retain: true
 
 temperaturehumidity1:
-  topic: temp               # optional, topic name for devices using this protocol
+  topic: 'sensor'               # optional, topic name for devices using this protocol
   devices:
     '0xF501': 'living_room'
     '0x7402': 'bedroom'

@@ -7,12 +7,13 @@ const mqtt = require('mqtt');
 const yaml = require('js-yaml');
 const fs = require('fs');
 
-var config = null;
-var client = null;
-var rfxtrx = null;
+let config = null;
+let client = null;
+let rfxtrx = null;
 
-var txProtocols = [];
+let txProtocols = [];
 
+let publishOptions={ retain:true, qos:1 };
 
 // --------------------------------------------------------------------------------------
 // Logging
@@ -71,37 +72,45 @@ function parseValue(s)
 
 function event_sensor(event, protocol)
 {
-    const topic = config[protocol].topic;
+    const baseTopic = config.mqtt.base_topic;
+    const setTopic = config[protocol].topic;
+
+    // Prepends the base_topic followed by a slash if it exists; otherwise uses just the set topic
+    const topic = baseTopic ? `${baseTopic}/${setTopic}` : setTopic;
 
     for( let i in config[protocol].devices ) {
         if( i == event.id ) {
             const m = config[protocol].devices[i];
             if( event.temperature !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/temperature`, parseValue(event.temperature));
+                client.publish(`${topic}/${m}/temperature/value`, parseValue(event.temperature), publishOptions);
             if( event.humidity !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/humidity`, parseValue(event.humidity));
+                client.publish(`${topic}/${m}/humidity/value`, parseValue(event.humidity), publishOptions);
             if( event.barometer !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/barometer`, parseValue(event.barometer));
+                client.publish(`${topic}/${m}/barometer/value`, parseValue(event.barometer), publishOptions);
             if( event.rainfallIncrement !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/rainfallIncrement`, parseValue(event.rainfallIncrement));
+                client.publish(`${topic}/${m}/rainfallIncrement/value`, parseValue(event.rainfallIncrement), publishOptions);
             if( event.rainfall !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/rainfall`, parseValue(event.rainfall));
+                client.publish(`${topic}/${m}/rainfall/value`, parseValue(event.rainfall), publishOptions);
             if( event.rainfallRate !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/rainfallRate`, parseValue(event.rainfallRate));
+                client.publish(`${topic}/${m}/rainfallRate/value`, parseValue(event.rainfallRate), publishOptions);
             if( event.gustSpeed !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/gustSpeed`, parseValue(event.gustSpeed));
+                client.publish(`${topic}/${m}/gustSpeed/value`, parseValue(event.gustSpeed), publishOptions);
             if( event.averageSpeed !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/averageSpeed`, parseValue(event.averageSpeed));
+                client.publish(`${topic}/${m}/averageSpeed/value`, parseValue(event.averageSpeed), publishOptions);
             if( event.direction !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/direction`, parseValue(event.direction));
+                client.publish(`${topic}/${m}/direction/value`, parseValue(event.direction), publishOptions);
             if( event.chillfactor !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/chillfactor`, parseValue(event.chillfactor));
+                client.publish(`${topic}/${m}/chillfactor/value`, parseValue(event.chillfactor), publishOptions);
             if( event.uv !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/uv`, parseValue(event.uv));
+                client.publish(`${topic}/${m}/uv/value`, parseValue(event.uv), publishOptions);
             if( event.insolation !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/insolation`, parseValue(event.insolation));
+                client.publish(`${topic}/${m}/insolation/value`, parseValue(event.insolation), publishOptions);
             if( event.weight !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/weight`, parseValue(event.weight));
+                client.publish(`${topic}/${m}/weight/value`, parseValue(event.weight), publishOptions);
+            if( event.batteryLevel !== undefined )
+                client.publish(`${topic}/${m}/battery/value`, parseValue(event.batteryLevel*11.1), publishOptions);
+            if( event.rssi !== undefined )
+                client.publish(`${topic}/${m}/rssi/value`, parseValue(event.rssi*8 - 120), publishOptions);
             break;
         }
     }
@@ -109,25 +118,29 @@ function event_sensor(event, protocol)
 
 function event_energy(event, protocol)
 {
-    const topic = config[protocol].topic;
+    const baseTopic = config.mqtt.base_topic;
+    const setTopic = config[protocol].topic;
+
+    // Prepends the base_topic followed by a slash if it exists; otherwise uses just the set topic
+    const topic = baseTopic ? `${baseTopic}/${setTopic}` : setTopic;
 
     for( let i in config[protocol].devices ) {
         if( i == event.id ) {
             const m = config[protocol].devices[i];
             if( event.voltage !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/voltage`, parseValue(event.voltage));
+                client.publish(`${topic}/${m}/voltage`, parseValue(event.voltage), publishOptions);
             if( event.current !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/current`, parseValue(event.current));
+                client.publish(`${topic}/${m}/current`, parseValue(event.current), publishOptions);
             if( event.count !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/count`, parseValue(event.count));
+                client.publish(`${topic}/${m}/count`, parseValue(event.count), publishOptions);
             if( event.power !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/power`, parseValue(event.power));
+                client.publish(`${topic}/${m}/power`, parseValue(event.power), publishOptions);
             if( event.energy !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/energy`, parseValue(event.energy));
+                client.publish(`${topic}/${m}/energy`, parseValue(event.energy), publishOptions);
             if( event.powerFactor !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/powerFactor`, parseValue(event.powerFactor));
+                client.publish(`${topic}/${m}/powerFactor`, parseValue(event.powerFactor), publishOptions);
             if( event.frequency !== undefined )
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/frequency`, parseValue(event.frequency));
+                client.publish(`${topic}/${m}/frequency`, parseValue(event.frequency), publishOptions);
             break;
         }
     }
@@ -135,21 +148,24 @@ function event_energy(event, protocol)
 
 function event_lighting(event, protocol)
 {
-    const topic = config[protocol].topic;
+    const baseTopic = config.mqtt.base_topic;
+    const setTopic = config[protocol].topic;
+
+    // Prepends the base_topic followed by a slash if it exists; otherwise uses just the set topic
+    const topic = baseTopic ? `${baseTopic}/${setTopic}` : setTopic;
 
     for( let i in config[protocol].devices ) {
         if( i == `${event.id}/${event.unitCode}` ) {
             const m = config[protocol].devices[i];
             if( event.command !== 'Set Level' ) {
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/state`, event.command);
+                client.publish(`${topic}/${m}/state`, event.command);
             } else {
-                client.publish(`${config.mqtt.base_topic}/${topic}/${m}/level`, parseValue(event.level));
+                client.publish(`${topic}/${m}/level`, parseValue(event.level), publishOptions);
             }
             break;
         }
     }
 }
-
 
 // --------------------------------------------------------------------------------------
 // Protocol initializers
@@ -215,7 +231,12 @@ function subscribeTopics()
 {
     let topics = [];
     for( let p of txProtocols ) {
-        const topic = `${config.mqtt.base_topic}/${p.topic}/+/set`;
+        const baseTopic = config.mqtt.base_topic;
+        const setTopic = `${p.topic}/+/set`;
+
+        // Prepends the base_topic followed by a slash if it exists; otherwise uses just the set topic
+        const topic = baseTopic ? `${baseTopic}/${setTopic}/+/set` : setTopic;
+
         if( !topics.includes(topic) ) {
             client.subscribe(topic, (err) => { if( err ) console.log(err); });
             topics.push(topic);
@@ -289,7 +310,7 @@ function scanForDevices(mode, newOnly)
     }
 
     for( let i of protocols ) {
-        rfxtrx.on(i, function(event) { 
+        rfxtrx.on(i, function(event) {
             const device_id = `${event.id}${(event.unitCode >= 0) ? '/' + event.unitCode : ''}`;
             if( !seen.has(i + device_id) ) {
                 if( mode == 1 ) seen.set(i + device_id, true);
@@ -299,12 +320,12 @@ function scanForDevices(mode, newOnly)
                 console.log(`# Device type: ${packetType}:${event.subtype} (${s})`);
                 console.log(`  * Device ID:  ${device_id}`);
                 console.log(`  * Protocol:   ${i}`);
-                if( rfxcom[i] ) 
+                if( rfxcom[i] )
                     console.log(`  * TX subtype: ${rfxcom[i][event.subtype]}`);
                 if( mode == 0 ) {
-                    if( event.command ) 
+                    if( event.command )
                         console.log(`  * Command:    '${event.command}'`);
-                    if( event.rssi ) 
+                    if( event.rssi )
                         console.log(`  * RSSI:       ${event.rssi}`);
                 }
                 console.log('');
@@ -375,7 +396,7 @@ function main()
     // Open connection to the RFXTRX
     rfxtrx = new rfxcom.RfxCom(config.serial.port, { debug: false });
 
-    rfxtrx.on('connectfailed', () => { 
+    rfxtrx.on('connectfailed', () => {
         logerror('RFXC', `Cannot open serial port !`);
     });
 
@@ -392,7 +413,8 @@ function main()
 
         loginfo('MQTT', `Connecting MQTT server at ${config.mqtt.server}`);
 
-        config.mqtt.base_topic ??= 'rfxcom';
+        // retain-flag from configuration
+        publishOptions.retain = config.mqtt.retain ?? publishOptions.retain;;
 
         settings = {};
         if( config.mqtt.username ) settings.username = config.mqtt.username;
@@ -408,7 +430,7 @@ function main()
         client.on('error', (err) => {
             logerror('MQTT', `MQTT connection error`, false);
             console.log(err);
-            process.exit(1); 
+            process.exit(1);
         });
 
         client.on('message', receiveMessage);
@@ -420,14 +442,14 @@ function main()
 
     }
 
-    rfxtrx.on('status', (event) => { 
+    rfxtrx.on('status', (event) => {
         loginfo('RFXC', `${event.receiverType}, HW version ${event.hardwareVersion}`);
         loginfo('RFXC', `Firmware version ${event.firmwareVersion} (${event.firmwareType})`);
         loginfo('RFXC', `TX power +${event.transmitterPower} dBm`);
     });
 
     // Start the RFXTRX
-    rfxtrx.initialise(function() { 
+    rfxtrx.initialise(function() {
         rfxtrx.ready = true;
         loginfo('RFXC', `RFXCOM connection established`);
         if( args.scan || args.stream )
